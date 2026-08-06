@@ -21,17 +21,19 @@ import { Admin } from './modules/admin/entities/admin.entity';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    ThrottlerModule.forRoot([{
-      ttl: 60000, // 1 minute in milliseconds
-      limit: 100, // 100 requests per minute per client
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 1 minute in milliseconds
+        limit: 100, // 100 requests per minute per client
+      },
+    ]),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST || 'localhost',
       port: parseInt(process.env.DB_PORT ?? '5432', 10),
       username: process.env.DB_USERNAME || 'postgres',
       password: process.env.DB_PASSWORD || 'postgres',
-      database: process.env.DB_NAME || 'orionpay',
+      database: process.env.DB_DATABASE || 'orionpay',
       entities: [User, Wallet, Transaction, Admin],
       synchronize: process.env.NODE_ENV !== 'production',
       autoLoadEntities: true,
