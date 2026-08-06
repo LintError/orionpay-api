@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, UseGuards, Request, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  Request,
+  Param,
+} from '@nestjs/common';
 import { WalletsService } from './wallets.service';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -10,9 +18,13 @@ export class WalletsController {
   @Post()
   async createWallet(
     @Request() req,
-    @Body() createWalletDto: { chain: string; currency: string }
+    @Body() createWalletDto: { chain: string; currency: string },
   ) {
-    return this.walletsService.createWallet(req.user.id, createWalletDto.chain, createWalletDto.currency);
+    return this.walletsService.createWallet(
+      req.user.id,
+      createWalletDto.chain,
+      createWalletDto.currency,
+    );
   }
 
   @UseGuards(AuthGuard)

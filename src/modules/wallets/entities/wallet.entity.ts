@@ -1,4 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Transaction } from '../../payments/entities/transaction.entity';
 
@@ -19,13 +25,13 @@ export class Wallet {
   @Column()
   currency: string; // ETH, USDC, etc.
 
-  @ManyToOne(() => User, user => user.wallets)
+  @ManyToOne(() => User, (user) => user.wallets)
   user: User;
 
-  @OneToMany(() => Transaction, transaction => transaction.fromWallet)
+  @OneToMany(() => Transaction, (transaction) => transaction.fromWallet)
   sentTransactions: Transaction[];
 
-  @OneToMany(() => Transaction, transaction => transaction.toWallet)
+  @OneToMany(() => Transaction, (transaction) => transaction.toWallet)
   receivedTransactions: Transaction[];
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
