@@ -62,7 +62,7 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "walletAddress", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => wallet_entity_1.Wallet, wallet => wallet.user),
+    (0, typeorm_1.OneToMany)(() => wallet_entity_1.Wallet, (wallet) => wallet.user),
     __metadata("design:type", Array)
 ], User.prototype, "wallets", void 0);
 exports.User = User = __decorate([

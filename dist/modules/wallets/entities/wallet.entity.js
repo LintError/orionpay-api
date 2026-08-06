@@ -46,15 +46,15 @@ __decorate([
     __metadata("design:type", String)
 ], Wallet.prototype, "currency", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, user => user.wallets),
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user.wallets),
     __metadata("design:type", user_entity_1.User)
 ], Wallet.prototype, "user", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => transaction_entity_1.Transaction, transaction => transaction.fromWallet),
+    (0, typeorm_1.OneToMany)(() => transaction_entity_1.Transaction, (transaction) => transaction.fromWallet),
     __metadata("design:type", Array)
 ], Wallet.prototype, "sentTransactions", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => transaction_entity_1.Transaction, transaction => transaction.toWallet),
+    (0, typeorm_1.OneToMany)(() => transaction_entity_1.Transaction, (transaction) => transaction.toWallet),
     __metadata("design:type", Array)
 ], Wallet.prototype, "receivedTransactions", void 0);
 __decorate([

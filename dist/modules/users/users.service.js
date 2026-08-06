@@ -63,7 +63,9 @@ let UsersService = class UsersService {
         return this.usersRepository.findOneBy({ id });
     }
     async findByWalletAddress(walletAddress) {
-        return this.usersRepository.findOneBy({ walletAddress: walletAddress.toLowerCase() });
+        return this.usersRepository.findOneBy({
+            walletAddress: walletAddress.toLowerCase(),
+        });
     }
     async create(userData) {
         const hashedPassword = await bcrypt.hash(userData.password, 10);

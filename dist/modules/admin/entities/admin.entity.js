@@ -71,7 +71,11 @@ __decorate([
     __metadata("design:type", Date)
 ], Admin.prototype, "createdAt", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' }),
+    (0, typeorm_1.Column)({
+        type: 'timestamp',
+        default: () => 'CURRENT_TIMESTAMP',
+        onUpdate: 'CURRENT_TIMESTAMP',
+    }),
     __metadata("design:type", Date)
 ], Admin.prototype, "updatedAt", void 0);
 exports.Admin = Admin = __decorate([

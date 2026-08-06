@@ -22,7 +22,8 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
         super({
             jwtFromRequest: passport_jwt_1.ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
-            secretOrKey: configService.get('JWT_SECRET') ?? 'default_jwt_secret_key_change_in_production',
+            secretOrKey: configService.get('JWT_SECRET') ??
+                'default_jwt_secret_key_change_in_production',
         });
         this.configService = configService;
         this.authService = authService;

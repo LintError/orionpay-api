@@ -111,7 +111,12 @@ let AdminService = class AdminService {
         }
         await this.adminOtpRepository.update(validOtp.id, { isUsed: true });
         await this.adminRepository.update(admin.id, { lastLoginAt: new Date() });
-        const payload = { sub: admin.id, email: admin.email, role: admin.role, isAdmin: true };
+        const payload = {
+            sub: admin.id,
+            email: admin.email,
+            role: admin.role,
+            isAdmin: true,
+        };
         const accessToken = this.jwtService.sign(payload);
         const { password, ...result } = admin;
         return { accessToken, admin: result };
@@ -147,7 +152,12 @@ let AdminService = class AdminService {
             throw new common_1.UnauthorizedException('Invalid credentials');
         }
         await this.adminRepository.update(admin.id, { lastLoginAt: new Date() });
-        const payload = { sub: admin.id, email: admin.email, role: admin.role, isAdmin: true };
+        const payload = {
+            sub: admin.id,
+            email: admin.email,
+            role: admin.role,
+            isAdmin: true,
+        };
         const accessToken = this.jwtService.sign(payload);
         const { password, ...result } = admin;
         return { accessToken, admin: result };
@@ -185,7 +195,15 @@ let AdminService = class AdminService {
     }
     async getAllUsers(userRepository) {
         return userRepository.find({
-            select: ['id', 'email', 'firstName', 'lastName', 'isActive', 'createdAt', 'walletAddress'],
+            select: [
+                'id',
+                'email',
+                'firstName',
+                'lastName',
+                'isActive',
+                'createdAt',
+                'walletAddress',
+            ],
         });
     }
     async toggleUserStatus(userRepository, userId) {

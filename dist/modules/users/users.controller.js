@@ -31,7 +31,7 @@ let UsersController = class UsersController {
     }
     async findAll() {
         const users = await this.usersService.findAll();
-        return users.map(user => {
+        return users.map((user) => {
             const { password, ...result } = user;
             return result;
         });

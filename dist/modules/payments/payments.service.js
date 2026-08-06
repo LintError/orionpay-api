@@ -82,7 +82,9 @@ let PaymentsService = class PaymentsService {
             .createQueryBuilder('transaction')
             .leftJoinAndSelect('transaction.fromWallet', 'fromWallet')
             .leftJoinAndSelect('transaction.toWallet', 'toWallet')
-            .where('fromWallet.userId = :userId OR toWallet.userId = :userId', { userId })
+            .where('fromWallet.userId = :userId OR toWallet.userId = :userId', {
+            userId,
+        })
             .orderBy('transaction.createdAt', 'DESC')
             .getMany();
     }
@@ -92,7 +94,9 @@ let PaymentsService = class PaymentsService {
             .leftJoinAndSelect('transaction.fromWallet', 'fromWallet')
             .leftJoinAndSelect('transaction.toWallet', 'toWallet')
             .where('transaction.id = :id', { id })
-            .andWhere('fromWallet.userId = :userId OR toWallet.userId = :userId', { userId })
+            .andWhere('fromWallet.userId = :userId OR toWallet.userId = :userId', {
+            userId,
+        })
             .getOne();
     }
 };

@@ -33,17 +33,19 @@ exports.AppModule = AppModule = __decorate([
             config_1.ConfigModule.forRoot({
                 isGlobal: true,
             }),
-            throttler_1.ThrottlerModule.forRoot([{
+            throttler_1.ThrottlerModule.forRoot([
+                {
                     ttl: 60000,
                     limit: 100,
-                }]),
+                },
+            ]),
             typeorm_1.TypeOrmModule.forRoot({
                 type: 'postgres',
                 host: process.env.DB_HOST || 'localhost',
                 port: parseInt(process.env.DB_PORT ?? '5432', 10),
                 username: process.env.DB_USERNAME || 'postgres',
                 password: process.env.DB_PASSWORD || 'postgres',
-                database: process.env.DB_NAME || 'orionpay',
+                database: process.env.DB_DATABASE || 'orionpay',
                 entities: [user_entity_1.User, wallet_entity_1.Wallet, transaction_entity_1.Transaction, admin_entity_1.Admin],
                 synchronize: process.env.NODE_ENV !== 'production',
                 autoLoadEntities: true,

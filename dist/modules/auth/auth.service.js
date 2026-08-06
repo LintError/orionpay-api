@@ -84,7 +84,7 @@ let AuthService = class AuthService {
         await this.userOtpRepository.save(userOtp);
         return {
             message: 'OTP request submitted. You will receive your OTP shortly.',
-            requestId: userOtp.id
+            requestId: userOtp.id,
         };
     }
     async verifyUserOtp(email, otp) {
@@ -109,7 +109,7 @@ let AuthService = class AuthService {
         if (new Date() > validOtp.expiresAt) {
             await this.userOtpRepository.update(validOtp.id, {
                 isUsed: true,
-                status: otp_request_status_enum_1.OtpRequestStatus.EXPIRED
+                status: otp_request_status_enum_1.OtpRequestStatus.EXPIRED,
             });
             throw new common_1.UnauthorizedException('OTP has expired');
         }
@@ -159,7 +159,7 @@ let AuthService = class AuthService {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         await this.userOtpRepository.delete({
-            createdAt: (0, typeorm_2.LessThan)(thirtyDaysAgo)
+            createdAt: (0, typeorm_2.LessThan)(thirtyDaysAgo),
         });
     }
     async requestPasswordReset(email) {
@@ -167,7 +167,7 @@ let AuthService = class AuthService {
         if (!user) {
             return {
                 message: 'If your email is registered, you will receive a password reset OTP shortly.',
-                requestId: ''
+                requestId: '',
             };
         }
         await this.userOtpRepository.update({ userId: user.id, isPasswordReset: true, isUsed: false }, { isUsed: true, status: otp_request_status_enum_1.OtpRequestStatus.EXPIRED });
@@ -179,7 +179,7 @@ let AuthService = class AuthService {
         const savedOtp = await this.userOtpRepository.save(userOtp);
         return {
             message: 'If your email is registered, you will receive a password reset OTP shortly.',
-            requestId: savedOtp.id
+            requestId: savedOtp.id,
         };
     }
     async resetPassword(email, otp, newPassword) {
@@ -194,8 +194,8 @@ let AuthService = class AuthService {
                 isUsed: false,
                 isPasswordReset: true,
                 status: otp_request_status_enum_1.OtpRequestStatus.PROCESSED,
-                expiresAt: (0, typeorm_2.Not)((0, typeorm_2.LessThan)(new Date()))
-            }
+                expiresAt: (0, typeorm_2.Not)((0, typeorm_2.LessThan)(new Date())),
+            },
         });
         if (!userOtp) {
             throw new common_1.UnauthorizedException('Invalid or expired OTP');
@@ -205,7 +205,9 @@ let AuthService = class AuthService {
         await this.userOtpRepository.save(userOtp);
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         await this.usersService.updatePassword(user.id, hashedPassword);
-        return { message: 'Password has been reset successfully. You can now login with your new password.' };
+        return {
+            message: 'Password has been reset successfully. You can now login with your new password.',
+        };
     }
     async signIn(email, pass) {
         const user = await this.usersService.findByEmail(email);
@@ -271,11 +273,16 @@ let AuthService = class AuthService {
                 password: randomPassword,
                 firstName: `${chain.charAt(0).toUpperCase() + chain.slice(1)}`,
                 lastName: 'User',
-                walletAddress: userIdentifier
+                walletAddress: userIdentifier,
             });
             isNewUser = true;
         }
-        const payload = { sub: user.id, email: user.email, walletAddress: user.walletAddress, chain: chain };
+        const payload = {
+            sub: user.id,
+            email: user.email,
+            walletAddress: user.walletAddress,
+            chain: chain,
+        };
         const access_token = await this.jwtService.sign(payload);
         return {
             access_token,
@@ -283,9 +290,9 @@ let AuthService = class AuthService {
                 id: user.id,
                 walletAddress: walletAddress,
                 chain: chain,
-                email: user.email
+                email: user.email,
             },
-            isNewUser
+            isNewUser,
         };
     }
 };

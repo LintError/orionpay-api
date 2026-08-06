@@ -18,14 +18,14 @@ interface RoutingResult {
         time: number;
         liquidity: number;
     };
-    alternative_routes: any[];
+    alternatives: any[];
 }
 interface PriceAnalysisResult {
     currency: string;
     current_price_usd: number;
     weekly_change_percent: number;
     monthly_change_percent: number;
-    "7day_forecast": number[];
+    '7day_forecast': number[];
     insights: string[];
 }
 export declare class AiService {

@@ -17,7 +17,7 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const web3_1 = require("web3");
 const stellar_sdk_1 = __importDefault(require("stellar-sdk"));
-const { Server, Keypair, Networks, TransactionBuilder, Operation, BASE_FEE, Asset } = stellar_sdk_1.default;
+const { Horizon, Keypair, Networks, TransactionBuilder, Operation, BASE_FEE, Asset, } = stellar_sdk_1.default;
 class EvmProvider {
     web3;
     constructor(web3) {
@@ -27,7 +27,7 @@ class EvmProvider {
         const account = this.web3.eth.accounts.create();
         return {
             address: account.address,
-            privateKey: account.privateKey
+            privateKey: account.privateKey,
         };
     }
     async getBalance(address) {
@@ -65,19 +65,19 @@ class StellarProvider {
     server;
     constructor(horizonUrl, isTestnet = true) {
         this.isTestnet = isTestnet;
-        this.server = new Server(horizonUrl);
+        this.server = new Horizon.Server(horizonUrl);
     }
     async generateAddress() {
         const pair = Keypair.random();
         return {
             address: pair.publicKey(),
-            privateKey: pair.secret()
+            privateKey: pair.secret(),
         };
     }
     async getBalance(address) {
         try {
             const account = await this.server.loadAccount(address);
-            const nativeBalance = account.balances.find(b => b.asset_type === 'native');
+            const nativeBalance = account.balances.find((b) => b.asset_type === 'native');
             return nativeBalance ? Number(nativeBalance.balance) : 0;
         }
         catch {
@@ -89,12 +89,12 @@ class StellarProvider {
         const sourceAccount = await this.server.loadAccount(sourceKeypair.publicKey());
         const transaction = new TransactionBuilder(sourceAccount, {
             fee: BASE_FEE,
-            networkPassphrase: this.isTestnet ? Networks.TESTNET : Networks.PUBLIC
+            networkPassphrase: this.isTestnet ? Networks.TESTNET : Networks.PUBLIC,
         })
             .addOperation(Operation.payment({
             destination: toAddress,
             asset: Asset.native(),
-            amount: amount.toString()
+            amount: amount.toString(),
         }))
             .setTimeout(30)
             .build();
@@ -126,14 +126,22 @@ let BlockchainService = class BlockchainService {
     }
     initializeProviders() {
         const rpcUrls = new Map();
-        const blockchainUrls = this.configService.get('BLOCKCHAIN_RPC_URLS', '').split(',');
-        const chainConfigs = this.configService.get('SUPPORTED_CHAINS', 'ethereum:evm,polygon:evm,stellar:stellar').split(',');
-        blockchainUrls.forEach(url => {
-            const [chain, rpcUrl] = url.split(':');
+        const blockchainUrls = this.configService
+            .get('BLOCKCHAIN_RPC_URLS', '')
+            .split(',');
+        const chainConfigs = this.configService
+            .get('SUPPORTED_CHAINS', 'ethereum:evm,polygon:evm,stellar:stellar')
+            .split(',');
+        blockchainUrls.forEach((entry) => {
+            const separatorIndex = entry.indexOf(':');
+            if (separatorIndex === -1)
+                return;
+            const chain = entry.slice(0, separatorIndex).trim();
+            const rpcUrl = entry.slice(separatorIndex + 1).trim();
             if (chain && rpcUrl)
                 rpcUrls.set(chain, rpcUrl);
         });
-        chainConfigs.forEach(config => {
+        chainConfigs.forEach((config) => {
             const [chain, type] = config.split(':');
             if (!chain || !type)
                 return;
@@ -151,7 +159,10 @@ let BlockchainService = class BlockchainService {
         });
     }
     getSupportedChains() {
-        return Array.from(this.chainTypeMap.entries()).map(([chain, type]) => ({ chain, type }));
+        return Array.from(this.chainTypeMap.entries()).map(([chain, type]) => ({
+            chain,
+            type,
+        }));
     }
     getProvider(chain) {
         const provider = this.providers.get(chain);

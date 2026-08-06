@@ -18,10 +18,7 @@ let WalletsModule = class WalletsModule {
 exports.WalletsModule = WalletsModule;
 exports.WalletsModule = WalletsModule = __decorate([
     (0, common_1.Module)({
-        imports: [
-            typeorm_1.TypeOrmModule.forFeature([wallet_entity_1.Wallet]),
-            blockchain_module_1.BlockchainModule
-        ],
+        imports: [typeorm_1.TypeOrmModule.forFeature([wallet_entity_1.Wallet]), blockchain_module_1.BlockchainModule],
         providers: [wallets_service_1.WalletsService],
         controllers: [wallets_controller_1.WalletsController],
         exports: [wallets_service_1.WalletsService],

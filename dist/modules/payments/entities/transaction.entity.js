@@ -64,11 +64,13 @@ __decorate([
     __metadata("design:type", String)
 ], Transaction.prototype, "txHash", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => wallet_entity_1.Wallet, wallet => wallet.sentTransactions),
+    (0, typeorm_1.ManyToOne)(() => wallet_entity_1.Wallet, (wallet) => wallet.sentTransactions),
     __metadata("design:type", wallet_entity_1.Wallet)
 ], Transaction.prototype, "fromWallet", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => wallet_entity_1.Wallet, wallet => wallet.receivedTransactions, { nullable: true }),
+    (0, typeorm_1.ManyToOne)(() => wallet_entity_1.Wallet, (wallet) => wallet.receivedTransactions, {
+        nullable: true,
+    }),
     __metadata("design:type", Object)
 ], Transaction.prototype, "toWallet", void 0);
 __decorate([

@@ -35,7 +35,7 @@ let AiService = class AiService {
     }
     async getOptimalRouting(transaction) {
         try {
-            const response = await (0, rxjs_1.firstValueFrom)(this.httpService.post(`${this.aiServiceBaseUrl}/payment-routing/optimize`, transaction));
+            const response = await (0, rxjs_1.firstValueFrom)(this.httpService.post(`${this.aiServiceBaseUrl}/payment-routing/analyze`, transaction));
             return response.data;
         }
         catch (error) {
