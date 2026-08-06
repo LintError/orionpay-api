@@ -23,7 +23,7 @@ interface RoutingResult {
     time: number;
     liquidity: number;
   };
-  alternative_routes: any[];
+  alternatives: any[];
 }
 
 interface PriceAnalysisResult {
@@ -31,7 +31,7 @@ interface PriceAnalysisResult {
   current_price_usd: number;
   weekly_change_percent: number;
   monthly_change_percent: number;
-  "7day_forecast": number[];
+  '7day_forecast': number[];
   insights: string[];
 }
 
@@ -43,13 +43,19 @@ export class AiService {
     private httpService: HttpService,
     private configService: ConfigService,
   ) {
-    this.aiServiceBaseUrl = this.configService.get<string>('AI_SERVICE_URL', 'http://localhost:8000/api/v1');
+    this.aiServiceBaseUrl = this.configService.get<string>(
+      'AI_SERVICE_URL',
+      'http://localhost:8000/api/v1',
+    );
   }
 
   async checkFraud(transaction: TransactionRequest): Promise<FraudCheckResult> {
     try {
       const response = await firstValueFrom(
-        this.httpService.post<FraudCheckResult>(`${this.aiServiceBaseUrl}/fraud-detection/check`, transaction)
+        this.httpService.post<FraudCheckResult>(
+          `${this.aiServiceBaseUrl}/fraud-detection/check`,
+          transaction,
+        ),
       );
       return response.data;
     } catch (error) {
@@ -58,10 +64,15 @@ export class AiService {
     }
   }
 
-  async getOptimalRouting(transaction: TransactionRequest): Promise<RoutingResult> {
+  async getOptimalRouting(
+    transaction: TransactionRequest,
+  ): Promise<RoutingResult> {
     try {
       const response = await firstValueFrom(
-        this.httpService.post<RoutingResult>(`${this.aiServiceBaseUrl}/payment-routing/optimize`, transaction)
+        this.httpService.post<RoutingResult>(
+          `${this.aiServiceBaseUrl}/payment-routing/analyze`,
+          transaction,
+        ),
       );
       return response.data;
     } catch (error) {
@@ -73,7 +84,9 @@ export class AiService {
   async analyzePrices(currency: string): Promise<PriceAnalysisResult> {
     try {
       const response = await firstValueFrom(
-        this.httpService.get<PriceAnalysisResult>(`${this.aiServiceBaseUrl}/price-analysis/${currency}`)
+        this.httpService.get<PriceAnalysisResult>(
+          `${this.aiServiceBaseUrl}/price-analysis/${currency}`,
+        ),
       );
       return response.data;
     } catch (error) {
@@ -85,7 +98,9 @@ export class AiService {
   async getHealthCheck(): Promise<{ status: string }> {
     try {
       const response = await firstValueFrom(
-        this.httpService.get<{ status: string }>(`${this.aiServiceBaseUrl}/health`)
+        this.httpService.get<{ status: string }>(
+          `${this.aiServiceBaseUrl}/health`,
+        ),
       );
       return response.data;
     } catch (error) {
