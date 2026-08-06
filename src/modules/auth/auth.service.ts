@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not, LessThan } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -25,7 +29,9 @@ export class AuthService {
    * User requests an OTP - creates a pending request
    * OTP will be processed and sent by the cron job
    */
-  async requestUserOtp(email: string): Promise<{ message: string; requestId: string }> {
+  async requestUserOtp(
+    email: string,
+  ): Promise<{ message: string; requestId: string }> {
     const user = await this.usersService.findByEmail(email);
     if (!user) {
       throw new UnauthorizedException('User not found');
@@ -42,16 +48,19 @@ export class AuthService {
     });
 
     await this.userOtpRepository.save(userOtp);
-    return { 
+    return {
       message: 'OTP request submitted. You will receive your OTP shortly.',
-      requestId: userOtp.id
+      requestId: userOtp.id,
     };
   }
 
   /**
    * Verify user's OTP - works after cron job has processed the request and set the OTP
    */
-  async verifyUserOtp(email: string, otp: string): Promise<{ accessToken: string; user: any }> {
+  async verifyUserOtp(
+    email: string,
+    otp: string,
+  ): Promise<{ accessToken: string; user: any }> {
     const user = await this.usersService.findByEmail(email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -77,9 +86,9 @@ export class AuthService {
 
     // Check if OTP has expired
     if (new Date() > validOtp.expiresAt) {
-      await this.userOtpRepository.update(validOtp.id, { 
+      await this.userOtpRepository.update(validOtp.id, {
         isUsed: true,
-        status: OtpRequestStatus.EXPIRED 
+        status: OtpRequestStatus.EXPIRED,
       });
       throw new UnauthorizedException('OTP has expired');
     }
@@ -114,7 +123,9 @@ export class AuthService {
       return;
     }
 
-    console.log(`[OTP Cron] Processing ${pendingOtps.length} pending OTP requests`);
+    console.log(
+      `[OTP Cron] Processing ${pendingOtps.length} pending OTP requests`,
+    );
 
     for (const pendingOtp of pendingOtps) {
       try {
@@ -126,12 +137,12 @@ export class AuthService {
         // Invalidate any existing unused OTPs for this user
         await this.userOtpRepository.update(
           { userId: pendingOtp.userId, isUsed: false, id: Not(pendingOtp.id) },
-          { isUsed: true, status: OtpRequestStatus.EXPIRED }
+          { isUsed: true, status: OtpRequestStatus.EXPIRED },
         );
 
         // Generate 6-digit OTP
         const otp = randomInt(100000, 999999).toString();
-        
+
         // Set expiration to 15 minutes from now
         const expiresAt = new Date();
         expiresAt.setMinutes(expiresAt.getMinutes() + 15);
@@ -148,10 +159,14 @@ export class AuthService {
         // In a real production environment, you would send the OTP here:
         // await this.emailService.sendOtp(pendingOtp.user.email, otp);
         // await this.smsService.sendOtp(pendingOtp.user.phone, otp);
-        console.log(`[OTP Cron] Generated OTP ${otp} for user ${pendingOtp.user.email}`);
-
+        console.log(
+          `[OTP Cron] Generated OTP ${otp} for user ${pendingOtp.user.email}`,
+        );
       } catch (error) {
-        console.error(`[OTP Cron] Failed to process OTP request ${pendingOtp.id}:`, error);
+        console.error(
+          `[OTP Cron] Failed to process OTP request ${pendingOtp.id}:`,
+          error,
+        );
         await this.userOtpRepository.update(pendingOtp.id, {
           status: OtpRequestStatus.FAILED,
         });
@@ -166,29 +181,32 @@ export class AuthService {
   async cleanupExpiredOtps() {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
+
     await this.userOtpRepository.delete({
-      createdAt: LessThan(thirtyDaysAgo)
+      createdAt: LessThan(thirtyDaysAgo),
     });
   }
 
   /**
    * User requests a password reset - creates a password reset OTP request
    */
-  async requestPasswordReset(email: string): Promise<{ message: string; requestId: string }> {
+  async requestPasswordReset(
+    email: string,
+  ): Promise<{ message: string; requestId: string }> {
     const user = await this.usersService.findByEmail(email);
     if (!user) {
       // Don't reveal that the user doesn't exist for security
-      return { 
-        message: 'If your email is registered, you will receive a password reset OTP shortly.',
-        requestId: ''
+      return {
+        message:
+          'If your email is registered, you will receive a password reset OTP shortly.',
+        requestId: '',
       };
     }
 
     // Invalidate any existing password reset OTPs for this user
     await this.userOtpRepository.update(
       { userId: user.id, isPasswordReset: true, isUsed: false },
-      { isUsed: true, status: OtpRequestStatus.EXPIRED }
+      { isUsed: true, status: OtpRequestStatus.EXPIRED },
     );
 
     // Create new password reset OTP request
@@ -199,16 +217,21 @@ export class AuthService {
     userOtp.resetToken = uuidv4(); // Generate unique reset token for additional security
 
     const savedOtp = await this.userOtpRepository.save(userOtp);
-    return { 
-      message: 'If your email is registered, you will receive a password reset OTP shortly.',
-      requestId: savedOtp.id
+    return {
+      message:
+        'If your email is registered, you will receive a password reset OTP shortly.',
+      requestId: savedOtp.id,
     };
   }
 
   /**
    * Verify reset OTP and set new password
    */
-  async resetPassword(email: string, otp: string, newPassword: string): Promise<{ message: string }> {
+  async resetPassword(
+    email: string,
+    otp: string,
+    newPassword: string,
+  ): Promise<{ message: string }> {
     const user = await this.usersService.findByEmail(email);
     if (!user) {
       throw new UnauthorizedException('Invalid or expired OTP');
@@ -222,8 +245,8 @@ export class AuthService {
         isUsed: false,
         isPasswordReset: true,
         status: OtpRequestStatus.PROCESSED,
-        expiresAt: Not(LessThan(new Date()))
-      }
+        expiresAt: Not(LessThan(new Date())),
+      },
     });
 
     if (!userOtp) {
@@ -237,11 +260,14 @@ export class AuthService {
 
     // Hash the new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    
+
     // Update user's password
     await this.usersService.updatePassword(user.id, hashedPassword);
 
-    return { message: 'Password has been reset successfully. You can now login with your new password.' };
+    return {
+      message:
+        'Password has been reset successfully. You can now login with your new password.',
+    };
   }
 
   async signIn(email: string, pass: string): Promise<{ access_token: string }> {
@@ -249,7 +275,7 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    
+
     const isPasswordValid = await bcrypt.compare(pass, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
@@ -267,9 +293,15 @@ export class AuthService {
   }
 
   // Store nonces for wallet authentication (in production, use Redis)
-  private walletNonces = new Map<string, { nonce: string; expiresAt: number; chain: string }>();
+  private walletNonces = new Map<
+    string,
+    { nonce: string; expiresAt: number; chain: string }
+  >();
 
-  async generateNonce(walletAddress: string, chain: string): Promise<{ nonce: string; message: string }> {
+  async generateNonce(
+    walletAddress: string,
+    chain: string,
+  ): Promise<{ nonce: string; message: string }> {
     // Clean up expired nonces
     const now = Date.now();
     for (const [key, data] of this.walletNonces.entries()) {
@@ -280,7 +312,7 @@ export class AuthService {
 
     // Create unique key for chain+address
     const uniqueKey = `${chain}:${walletAddress.toLowerCase()}`;
-    
+
     // Generate new nonce
     const nonce = uuidv4();
     const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
@@ -296,10 +328,10 @@ export class AuthService {
     chain: string,
     signature: string,
     message: string,
-    nonce: string
+    nonce: string,
   ): Promise<{ access_token: string; user: any; isNewUser: boolean }> {
     const uniqueKey = `${chain}:${walletAddress.toLowerCase()}`;
-    
+
     // Verify nonce exists and is valid
     const storedNonceData = this.walletNonces.get(uniqueKey);
     if (!storedNonceData || storedNonceData.nonce !== nonce) {
@@ -318,7 +350,7 @@ export class AuthService {
         chain,
         message,
         signature,
-        walletAddress
+        walletAddress,
       );
     } catch (error) {
       throw new UnauthorizedException('Failed to verify signature');
@@ -344,13 +376,18 @@ export class AuthService {
         password: randomPassword,
         firstName: `${chain.charAt(0).toUpperCase() + chain.slice(1)}`,
         lastName: 'User',
-        walletAddress: userIdentifier
+        walletAddress: userIdentifier,
       });
       isNewUser = true;
     }
 
     // Generate JWT
-    const payload = { sub: user.id, email: user.email, walletAddress: user.walletAddress, chain: chain };
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      walletAddress: user.walletAddress,
+      chain: chain,
+    };
     const access_token = await this.jwtService.sign(payload);
 
     return {
@@ -359,9 +396,9 @@ export class AuthService {
         id: user.id,
         walletAddress: walletAddress,
         chain: chain,
-        email: user.email
+        email: user.email,
       },
-      isNewUser
+      isNewUser,
     };
   }
 }

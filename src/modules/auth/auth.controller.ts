@@ -19,7 +19,10 @@ export class AuthController {
   @Post('wallet/nonce')
   @HttpCode(HttpStatus.OK)
   async generateWalletNonce(@Body() generateNonceDto: GenerateNonceDto) {
-    return this.authService.generateNonce(generateNonceDto.walletAddress, generateNonceDto.chain);
+    return this.authService.generateNonce(
+      generateNonceDto.walletAddress,
+      generateNonceDto.chain,
+    );
   }
 
   @Post('wallet/connect')
@@ -30,7 +33,7 @@ export class AuthController {
       walletConnectDto.chain,
       walletConnectDto.signature,
       walletConnectDto.message,
-      walletConnectDto.nonce
+      walletConnectDto.nonce,
     );
   }
 
@@ -43,7 +46,10 @@ export class AuthController {
   @Post('otp/verify')
   @HttpCode(HttpStatus.OK)
   async verifyOtp(@Body() userVerifyOtpDto: UserVerifyOtpDto) {
-    return this.authService.verifyUserOtp(userVerifyOtpDto.email, userVerifyOtpDto.otp);
+    return this.authService.verifyUserOtp(
+      userVerifyOtpDto.email,
+      userVerifyOtpDto.otp,
+    );
   }
 
   // Admin endpoint to manually process pending OTP requests (until cron is set up)
@@ -73,7 +79,7 @@ export class AuthController {
     return this.authService.resetPassword(
       resetPasswordDto.email,
       resetPasswordDto.otp,
-      resetPasswordDto.newPassword
+      resetPasswordDto.newPassword,
     );
   }
 }
