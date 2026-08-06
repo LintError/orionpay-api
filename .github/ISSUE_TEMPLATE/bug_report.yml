@@ -1,0 +1,32 @@
+name: Bug report
+description: Report a problem with the API or AI service
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for helping improve OrionPay.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened?
+      placeholder: Describe the bug clearly.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: 1. Start the app\n2. Call endpoint X\n3. Observe error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: OS, Node version, Python version, Docker, etc.
