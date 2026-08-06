@@ -6,10 +6,7 @@ import { Wallet } from './entities/wallet.entity';
 import { BlockchainModule } from '../blockchain/blockchain.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Wallet]),
-    BlockchainModule
-  ],
+  imports: [TypeOrmModule.forFeature([Wallet]), BlockchainModule],
   providers: [WalletsService],
   controllers: [WalletsController],
   exports: [WalletsService],

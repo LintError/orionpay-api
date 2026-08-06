@@ -33,10 +33,12 @@ export class Transaction {
   @Column({ nullable: true })
   txHash: string; // On-chain transaction hash
 
-  @ManyToOne(() => Wallet, wallet => wallet.sentTransactions)
+  @ManyToOne(() => Wallet, (wallet) => wallet.sentTransactions)
   fromWallet: Wallet;
 
-  @ManyToOne(() => Wallet, wallet => wallet.receivedTransactions, { nullable: true })
+  @ManyToOne(() => Wallet, (wallet) => wallet.receivedTransactions, {
+    nullable: true,
+  })
   toWallet: Wallet | null;
 
   @Column('float', { nullable: true })

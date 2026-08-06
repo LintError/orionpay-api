@@ -30,6 +30,6 @@ export class User {
   @Column({ unique: true, nullable: true })
   walletAddress?: string;
 
-  @OneToMany(() => Wallet, wallet => wallet.user)
+  @OneToMany(() => Wallet, (wallet) => wallet.user)
   wallets: Wallet[];
 }

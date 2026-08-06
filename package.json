@@ -1,10 +1,22 @@
 {
   "name": "orionpay-backend",
-  "version": "0.0.1",
-  "description": "",
-  "author": "",
-  "private": true,
-  "license": "UNLICENSED",
+  "version": "0.1.0",
+  "description": "AI-powered, Stellar-first multi-chain payment infrastructure built with NestJS.",
+  "author": "OrionPay",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OthmanImam/orionpay-backend.git"
+  },
+  "keywords": [
+    "stellar",
+    "blockchain",
+    "payments",
+    "multi-chain",
+    "nestjs",
+    "fintech",
+    "web3"
+  ],
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
@@ -28,6 +40,8 @@
     "@nestjs/passport": "^11.0.0",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/schedule": "^6.1.3",
+    "@nestjs/swagger": "^11.4.6",
+    "@nestjs/throttler": "^6.5.0",
     "@nestjs/typeorm": "^11.0.0",
     "axios": "^1.6.0",
     "bcrypt": "^5.1.1",

@@ -1,4 +1,11 @@
-import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -7,12 +14,15 @@ export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Post()
-  async create(@Body() createUserDto: {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-  }) {
+  async create(
+    @Body()
+    createUserDto: {
+      email: string;
+      password: string;
+      firstName: string;
+      lastName: string;
+    },
+  ) {
     const user = await this.usersService.create(createUserDto);
     const { password, ...result } = user;
     return result;
@@ -28,7 +38,7 @@ export class UsersController {
   @Get()
   async findAll() {
     const users = await this.usersService.findAll();
-    return users.map(user => {
+    return users.map((user) => {
       const { password, ...result } = user;
       return result;
     });

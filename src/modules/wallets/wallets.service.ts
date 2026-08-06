@@ -12,17 +12,21 @@ export class WalletsService {
     private blockchainService: BlockchainService,
   ) {}
 
-  async createWallet(userId: string, chain: string, currency: string): Promise<Wallet> {
+  async createWallet(
+    userId: string,
+    chain: string,
+    currency: string,
+  ): Promise<Wallet> {
     // Generate new wallet address via blockchain service
     const { address } = await this.blockchainService.generateAddress(chain);
-    
+
     const wallet = this.walletsRepository.create({
       address,
       chain,
       currency,
       user: { id: userId },
     });
-    
+
     return this.walletsRepository.save(wallet);
   }
 
@@ -43,11 +47,14 @@ export class WalletsService {
   async updateBalance(walletId: string): Promise<Wallet> {
     const wallet = await this.walletsRepository.findOneBy({ id: walletId });
     if (!wallet) throw new Error('Wallet not found');
-    
+
     // Fetch current on-chain balance
-    const onChainBalance = await this.blockchainService.getBalance(wallet.chain, wallet.address);
+    const onChainBalance = await this.blockchainService.getBalance(
+      wallet.chain,
+      wallet.address,
+    );
     wallet.balance = onChainBalance;
-    
+
     return this.walletsRepository.save(wallet);
   }
 }

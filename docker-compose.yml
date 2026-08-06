@@ -1,0 +1,54 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_DATABASE:-orionpay}
+    ports:
+      - '${DB_PORT:-5432}:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME:-postgres}']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  ai:
+    build:
+      context: .
+      dockerfile: docker/ai.Dockerfile
+    restart: unless-stopped
+    ports:
+      - '8000:8000'
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      ai:
+        condition: service_started
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_DATABASE: ${DB_DATABASE:-orionpay}
+      PORT: 3000
+      NODE_ENV: ${NODE_ENV:-development}
+      JWT_SECRET: ${JWT_SECRET:-change_me_in_production}
+      BLOCKCHAIN_RPC_URLS: ${BLOCKCHAIN_RPC_URLS:-stellar:https://horizon-testnet.stellar.org}
+      SUPPORTED_CHAINS: ${SUPPORTED_CHAINS:-stellar:stellar}
+      STELLAR_TESTNET: ${STELLAR_TESTNET:-true}
+      AI_SERVICE_URL: http://ai:8000/api/v1
+    ports:
+      - '${PORT:-3000}:3000'
+
+volumes:
+  pgdata:
