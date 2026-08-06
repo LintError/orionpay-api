@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, UseGuards, Request, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  Request,
+  Param,
+} from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -10,19 +18,20 @@ export class PaymentsController {
   @Post('send')
   async sendPayment(
     @Request() req,
-    @Body() sendPaymentDto: {
+    @Body()
+    sendPaymentDto: {
       fromWalletId: string;
       toAddress: string;
       amount: number;
       currency: string;
-    }
+    },
   ) {
     return this.paymentsService.initiateTransaction(
       req.user.id,
       sendPaymentDto.fromWalletId,
       sendPaymentDto.toAddress,
       sendPaymentDto.amount,
-      sendPaymentDto.currency
+      sendPaymentDto.currency,
     );
   }
 
