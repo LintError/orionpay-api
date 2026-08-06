@@ -21,12 +21,15 @@ export class PaymentsService {
     fromWalletId: string,
     toAddress: string,
     amount: number,
-    currency: string
+    currency: string,
   ): Promise<Transaction> {
     // Get source wallet
-    const fromWallet = await this.walletsService.getWalletById(fromWalletId, userId);
+    const fromWallet = await this.walletsService.getWalletById(
+      fromWalletId,
+      userId,
+    );
     if (!fromWallet) throw new Error('Source wallet not found');
-    
+
     if (fromWallet.balance < amount) {
       throw new Error('Insufficient balance');
     }
@@ -70,13 +73,13 @@ export class PaymentsService {
         routingResult.optimal_route.chain,
         '', // In production, retrieve private key securely from vault,
         toAddress,
-        amount
+        amount,
       );
-      
+
       savedTx.txHash = txHash;
       savedTx.status = TransactionStatus.CONFIRMED;
       savedTx.confirmedAt = new Date();
-      
+
       return this.transactionsRepository.save(savedTx);
     } catch (error) {
       savedTx.status = TransactionStatus.FAILED;
@@ -90,18 +93,25 @@ export class PaymentsService {
       .createQueryBuilder('transaction')
       .leftJoinAndSelect('transaction.fromWallet', 'fromWallet')
       .leftJoinAndSelect('transaction.toWallet', 'toWallet')
-      .where('fromWallet.userId = :userId OR toWallet.userId = :userId', { userId })
+      .where('fromWallet.userId = :userId OR toWallet.userId = :userId', {
+        userId,
+      })
       .orderBy('transaction.createdAt', 'DESC')
       .getMany();
   }
 
-  async getTransactionById(id: string, userId: string): Promise<Transaction | null> {
+  async getTransactionById(
+    id: string,
+    userId: string,
+  ): Promise<Transaction | null> {
     return this.transactionsRepository
       .createQueryBuilder('transaction')
       .leftJoinAndSelect('transaction.fromWallet', 'fromWallet')
       .leftJoinAndSelect('transaction.toWallet', 'toWallet')
       .where('transaction.id = :id', { id })
-      .andWhere('fromWallet.userId = :userId OR toWallet.userId = :userId', { userId })
+      .andWhere('fromWallet.userId = :userId OR toWallet.userId = :userId', {
+        userId,
+      })
       .getOne();
   }
 }
