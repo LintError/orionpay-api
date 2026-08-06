@@ -32,9 +32,9 @@ class RouteOption:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "chain": self.chain,
-            "fee_usd": self.fee,
-            "estimated_time_minutes": self.time,
-            "available_liquidity_usd": self.liquidity,
+            "fee": self.fee,
+            "time": self.time,
+            "liquidity": self.liquidity,
             "score": self.score
         }
     
@@ -49,6 +49,7 @@ class PaymentRoutingService:
     def _initialize_chain_metrics(self) -> List[RouteOption]:
         """Initialize current chain metrics - would be updated in real-time"""
         return [
+            RouteOption("stellar", 0.01, 1, 400000),
             RouteOption("ethereum", 15.50, 15, 500000),
             RouteOption("polygon", 0.50, 5, 250000),
             RouteOption("arbitrum", 1.20, 8, 180000),
