@@ -1,10 +1,15 @@
-import { Injectable, NotFoundException, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { randomInt } from 'crypto';
-import { Admin, AdminRole } from './entities/admin.entity';
+import { Admin } from './entities/admin.entity';
 import { AdminOtp } from './entities/admin-otp.entity';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
@@ -37,12 +42,12 @@ export class AdminService {
     // Invalidate any existing unused OTPs for this admin
     await this.adminOtpRepository.update(
       { adminId: admin.id, isUsed: false },
-      { isUsed: true }
+      { isUsed: true },
     );
 
     // Generate 6-digit OTP
     const otp = randomInt(100000, 999999).toString();
-    
+
     // Set expiration to 15 minutes from now
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 15);
@@ -66,7 +71,10 @@ export class AdminService {
   /**
    * Verify OTP and issue JWT token if valid
    */
-  async verifyOtp(email: string, otp: string): Promise<{ accessToken: string; admin: Omit<Admin, 'password'> }> {
+  async verifyOtp(
+    email: string,
+    otp: string,
+  ): Promise<{ accessToken: string; admin: Omit<Admin, 'password'> }> {
     const admin = await this.adminRepository.findOne({ where: { email } });
     if (!admin) {
       throw new UnauthorizedException('Invalid credentials');
@@ -102,14 +110,21 @@ export class AdminService {
     await this.adminRepository.update(admin.id, { lastLoginAt: new Date() });
 
     // Generate JWT
-    const payload = { sub: admin.id, email: admin.email, role: admin.role, isAdmin: true };
+    const payload = {
+      sub: admin.id,
+      email: admin.email,
+      role: admin.role,
+      isAdmin: true,
+    };
     const accessToken = this.jwtService.sign(payload);
 
     const { password, ...result } = admin;
     return { accessToken, admin: result };
   }
 
-  async create(createAdminDto: CreateAdminDto): Promise<Omit<Admin, 'password'>> {
+  async create(
+    createAdminDto: CreateAdminDto,
+  ): Promise<Omit<Admin, 'password'>> {
     const existingAdmin = await this.adminRepository.findOne({
       where: { email: createAdminDto.email },
     });
@@ -129,7 +144,9 @@ export class AdminService {
     return result;
   }
 
-  async login(adminLoginDto: AdminLoginDto): Promise<{ accessToken: string; admin: Omit<Admin, 'password'> }> {
+  async login(
+    adminLoginDto: AdminLoginDto,
+  ): Promise<{ accessToken: string; admin: Omit<Admin, 'password'> }> {
     const admin = await this.adminRepository.findOne({
       where: { email: adminLoginDto.email },
     });
@@ -142,14 +159,22 @@ export class AdminService {
       throw new UnauthorizedException('Admin account is deactivated');
     }
 
-    const isPasswordValid = await bcrypt.compare(adminLoginDto.password, admin.password);
+    const isPasswordValid = await bcrypt.compare(
+      adminLoginDto.password,
+      admin.password,
+    );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     await this.adminRepository.update(admin.id, { lastLoginAt: new Date() });
 
-    const payload = { sub: admin.id, email: admin.email, role: admin.role, isAdmin: true };
+    const payload = {
+      sub: admin.id,
+      email: admin.email,
+      role: admin.role,
+      isAdmin: true,
+    };
     const accessToken = this.jwtService.sign(payload);
 
     const { password, ...result } = admin;
@@ -170,7 +195,10 @@ export class AdminService {
     return result;
   }
 
-  async update(id: string, updateAdminDto: UpdateAdminDto): Promise<Omit<Admin, 'password'>> {
+  async update(
+    id: string,
+    updateAdminDto: UpdateAdminDto,
+  ): Promise<Omit<Admin, 'password'>> {
     const admin = await this.adminRepository.findOne({ where: { id } });
     if (!admin) {
       throw new NotFoundException('Admin not found');
@@ -196,7 +224,15 @@ export class AdminService {
   // User management for admins
   async getAllUsers(userRepository: Repository<any>) {
     return userRepository.find({
-      select: ['id', 'email', 'firstName', 'lastName', 'isActive', 'createdAt', 'walletAddress'],
+      select: [
+        'id',
+        'email',
+        'firstName',
+        'lastName',
+        'isActive',
+        'createdAt',
+        'walletAddress',
+      ],
     });
   }
 
@@ -220,7 +256,7 @@ export class AdminService {
       .createQueryBuilder('transaction')
       .select('SUM(transaction.amount)', 'total')
       .getRawOne();
-    
+
     const recentTransactions = await transactionRepository.find({
       order: { createdAt: 'DESC' },
       take: 10,
