@@ -3,6 +3,7 @@ import {
   ExecutionContext,
   Injectable,
   UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles.decorator';
@@ -19,7 +20,7 @@ export class RolesGuard implements CanActivate {
       [context.getHandler(), context.getClass()],
     );
 
-    if (!requiredRoles) {
+    if (!requiredRoles || requiredRoles.length === 0) {
       return true;
     }
 
@@ -30,6 +31,11 @@ export class RolesGuard implements CanActivate {
       throw new UnauthorizedException('Admin not authenticated');
     }
 
-    return requiredRoles.some((role) => admin.role === role);
+    const hasRole = requiredRoles.some((role) => admin.role === role);
+    if (!hasRole) {
+      throw new ForbiddenException('Forbidden resource');
+    }
+
+    return true;
   }
 }
