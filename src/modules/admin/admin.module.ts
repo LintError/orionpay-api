@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { AdminService } from './admin.service';
 import { AdminController } from './admin.controller';
+import { AdminAuthController } from './admin-auth.controller';
 import { Admin } from './entities/admin.entity';
 import { AdminOtp } from './entities/admin-otp.entity';
 import { User } from '../users/entities/user.entity';
@@ -34,7 +35,7 @@ function validateJwtSecret(secret: string | undefined): string {
     }),
   ],
   providers: [AdminService, AdminGuard, RolesGuard],
-  controllers: [AdminController],
+  controllers: [AdminController, AdminAuthController],
   exports: [AdminService],
 })
 export class AdminModule {}

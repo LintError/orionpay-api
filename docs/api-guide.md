@@ -106,3 +106,70 @@ them internally. See [ai-engine.md](./ai-engine.md).
 | `/payment-routing/analyze`  | POST   | Optimal chain/route suggestion |
 | `/price-analysis/:currency` | GET    | Price trend + forecast         |
 | `/health`                   | GET    | Liveness probe                 |
+
+## Admin
+
+### Authentication (public routes)
+
+#### Admin login (password)
+
+```http
+POST /admin/auth/login
+Content-Type: application/json
+
+{ "email": "admin@example.com", "password": "secret" }
+```
+
+Response:
+```json
+{ "accessToken": "eyJhbGciOi...", "admin": { "id": "...", "email": "...", "role": "SUPER_ADMIN", "isActive": true } }
+```
+
+#### Generate OTP
+
+```http
+POST /admin/auth/otp/generate
+Content-Type: application/json
+
+{ "email": "admin@example.com" }
+```
+
+Response (development):
+```json
+{ "message": "OTP generated successfully", "otp": "123456" }
+```
+
+Response (production):
+```json
+{ "message": "OTP sent to your registered email" }
+```
+
+#### Verify OTP
+
+```http
+POST /admin/auth/otp/verify
+Content-Type: application/json
+
+{ "email": "admin@example.com", "otp": "123456" }
+```
+
+Response:
+```json
+{ "accessToken": "eyJhbGciOi...", "admin": { "id": "...", "email": "...", "role": "SUPER_ADMIN", "isActive": true } }
+```
+
+### Admin management (protected routes)
+
+All routes below require `Authorization: Bearer <admin-jwt>` with `isAdmin: true`.
+
+| Role required | Method | Endpoint | Description |
+|---------------|--------|----------|-------------|
+| SUPER_ADMIN   | POST   | /admin/admins | Create admin |
+| SUPER_ADMIN, ADMIN | GET | /admin/admins | List admins |
+| SUPER_ADMIN, ADMIN | GET | /admin/admins/:id | Get admin |
+| SUPER_ADMIN   | PATCH  | /admin/admins/:id | Update admin |
+| SUPER_ADMIN   | DELETE | /admin/admins/:id | Delete admin |
+| SUPER_ADMIN, ADMIN, MODERATOR | GET | /admin/users | List users |
+| SUPER_ADMIN, ADMIN | PATCH | /admin/users/:id/toggle-status | Toggle user status |
+| SUPER_ADMIN, ADMIN, MODERATOR | GET | /admin/transactions | List all transactions |
+| SUPER_ADMIN, ADMIN, MODERATOR | GET | /admin/dashboard/stats | Dashboard statistics |
