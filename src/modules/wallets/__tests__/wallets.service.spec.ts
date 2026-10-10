@@ -67,6 +67,7 @@ describe('WalletsService', () => {
       blockchainService.getBalance.mockRejectedValue(error);
       walletsRepository.save.mockResolvedValue(mockWallet); // Should not be called
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       await expect(() => service.updateBalance('wallet-123')).rejects.toThrow(
         BlockchainProviderUnavailableError,
       );
@@ -78,12 +79,14 @@ describe('WalletsService', () => {
       walletsRepository.findOneBy.mockResolvedValue(mockWallet);
       blockchainService.getBalance.mockRejectedValue(new Error('some other error'));
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       await expect(() => service.updateBalance('wallet-123')).rejects.toThrow('some other error');
     });
 
     it('should throw when wallet not found', async () => {
       walletsRepository.findOneBy.mockResolvedValue(null);
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       await expect(() => service.updateBalance('nonexistent')).rejects.toThrow('Wallet not found');
     });
   });
