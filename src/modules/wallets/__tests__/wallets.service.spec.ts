@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { WalletsService } from '../wallets.service';
-import { BlockchainService, BlockchainProviderUnavailableError } from '../blockchain/blockchain.service';
+import { BlockchainService, BlockchainProviderUnavailableError } from '@modules/blockchain/blockchain.service';
 import { Repository } from 'typeorm';
-import { Wallet } from './entities/wallet.entity';
+import { Wallet } from '../entities/wallet.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 
 /* eslint-disable @typescript-eslint/unbound-method */

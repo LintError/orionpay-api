@@ -2,6 +2,50 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BlockchainService, BlockchainProviderUnavailableError } from '../blockchain.service';
 import { ConfigService } from '@nestjs/config';
 
+// Mock stellar-sdk before importing BlockchainService
+jest.mock('stellar-sdk', () => {
+  const mockLoadAccount = jest.fn();
+  const mockSubmitTransaction = jest.fn();
+
+  return {
+    Horizon: {
+      Server: jest.fn().mockImplementation(() => ({
+        loadAccount: mockLoadAccount,
+        submitTransaction: mockSubmitTransaction,
+      })),
+    },
+    Keypair: {
+      random: () => ({
+        publicKey: () => 'GTESTPUBLICKEY1234567890123456789012345678901234',
+        secret: () => 'STESTSECRETKEY1234567890123456789012345678901234',
+      }),
+    },
+    Networks: {
+      TESTNET: 'Test SDF Network ; September 2015',
+      PUBLIC: 'Public Global Stellar Network ; September 2015',
+    },
+    TransactionBuilder: () => ({
+      addOperation: jest.fn().mockReturnThis(),
+      setTimeout: jest.fn().mockReturnThis(),
+      build: () => ({
+        sign: jest.fn(),
+        toXDR: () => 'mock-xdr',
+      }),
+    }),
+    Operation: {
+      payment: jest.fn(),
+    },
+    BASE_FEE: 100,
+    Asset: {
+      native: () => ({ type: 'native' }),
+    },
+  };
+});
+
+// Import after mock
+import StellarSdk from 'stellar-sdk';
+import { BlockchainService, BlockchainProviderUnavailableError } from '../blockchain.service';
+
 describe('BlockchainService', () => {
   let service: BlockchainService;
   let configService: jest.Mocked<ConfigService>;
@@ -9,18 +53,12 @@ describe('BlockchainService', () => {
   const mockLoadAccount = jest.fn();
   const mockSubmitTransaction = jest.fn();
 
-  jest.mock('stellar-sdk', () => {
-    const original = jest.requireActual('stellar-sdk');
-    return {
-      ...original,
-      Horizon: {
-        ...original.Horizon,
-        Server: jest.fn().mockImplementation(() => ({
-          loadAccount: mockLoadAccount,
-          submitTransaction: mockSubmitTransaction,
-        })),
-      },
-    };
+  // Re-apply mock implementation to capture the mock functions
+  beforeAll(() => {
+    (StellarSdk.Horizon.Server as jest.Mock).mockImplementation(() => ({
+      loadAccount: mockLoadAccount,
+      submitTransaction: mockSubmitTransaction,
+    }));
   });
 
   beforeEach(async () => {
