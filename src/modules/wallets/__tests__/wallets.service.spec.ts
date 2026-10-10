@@ -67,7 +67,7 @@ describe('WalletsService', () => {
       blockchainService.getBalance.mockRejectedValue(error);
       walletsRepository.save.mockResolvedValue(mockWallet); // Should not be called
 
-      await expect(service.updateBalance('wallet-123')).rejects.toThrow(
+      await expect(() => service.updateBalance('wallet-123')).rejects.toThrow(
         BlockchainProviderUnavailableError,
       );
 
