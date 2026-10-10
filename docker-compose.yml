@@ -42,7 +42,7 @@ services:
       DB_DATABASE: ${DB_DATABASE:-orionpay}
       PORT: 3000
       NODE_ENV: ${NODE_ENV:-development}
-      JWT_SECRET: ${JWT_SECRET:-change_me_in_production}
+      JWT_SECRET: ${JWT_SECRET}
       BLOCKCHAIN_RPC_URLS: ${BLOCKCHAIN_RPC_URLS:-stellar:https://horizon-testnet.stellar.org}
       SUPPORTED_CHAINS: ${SUPPORTED_CHAINS:-stellar:stellar}
       STELLAR_TESTNET: ${STELLAR_TESTNET:-true}

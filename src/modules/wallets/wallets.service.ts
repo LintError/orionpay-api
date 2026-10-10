@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Wallet } from './entities/wallet.entity';
-import { BlockchainService } from '../blockchain/blockchain.service';
+import { BlockchainService, BlockchainProviderUnavailableError } from '../blockchain/blockchain.service';
 
 @Injectable()
 export class WalletsService {
@@ -49,12 +49,19 @@ export class WalletsService {
     if (!wallet) throw new Error('Wallet not found');
 
     // Fetch current on-chain balance
-    const onChainBalance = await this.blockchainService.getBalance(
-      wallet.chain,
-      wallet.address,
-    );
-    wallet.balance = onChainBalance;
-
-    return this.walletsRepository.save(wallet);
+    try {
+      const onChainBalance = await this.blockchainService.getBalance(
+        wallet.chain,
+        wallet.address,
+      );
+      wallet.balance = onChainBalance;
+      return this.walletsRepository.save(wallet);
+    } catch (error) {
+      // If the blockchain provider is unavailable, re-throw to leave the stored balance untouched
+      if (error instanceof BlockchainProviderUnavailableError) {
+        throw error;
+      }
+      throw error;
+    }
   }
 }

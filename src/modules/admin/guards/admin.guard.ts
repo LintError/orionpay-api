@@ -19,21 +19,24 @@ export class AdminGuard implements CanActivate {
       throw new UnauthorizedException('Access token missing');
     }
 
+    let payload: unknown;
     try {
-      const payload = await this.jwtService.verifyAsync(token);
-      if (!payload.isAdmin) {
-        throw new UnauthorizedException('Admin access required');
-      }
-      // Attach the full admin payload to the request object including role
-      request['admin'] = {
-        id: payload.sub,
-        email: payload.email,
-        role: payload.role,
-        isAdmin: payload.isAdmin,
-      };
-    } catch (error) {
+      payload = await this.jwtService.verifyAsync(token);
+    } catch {
       throw new UnauthorizedException('Invalid or expired token');
     }
+
+    if (!payload || typeof payload !== 'object' || !('isAdmin' in payload) || !payload.isAdmin) {
+      throw new UnauthorizedException('Admin access required');
+    }
+
+    // Attach the full admin payload to the request object including role
+    request['admin'] = {
+      id: (payload as any).sub,
+      email: (payload as any).email,
+      role: (payload as any).role,
+      isAdmin: (payload as any).isAdmin,
+    };
 
     return true;
   }

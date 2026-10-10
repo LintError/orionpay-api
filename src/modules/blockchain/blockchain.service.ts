@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Web3 } from 'web3';
 import StellarSdk from 'stellar-sdk';
@@ -27,6 +27,18 @@ interface BlockchainProvider {
     signature: string,
     address: string,
   ): Promise<boolean>;
+}
+
+export class BlockchainProviderUnavailableError extends Error {
+  constructor(
+    message: string,
+    public readonly chain: string,
+    public readonly address: string,
+    public readonly cause?: Error,
+  ) {
+    super(message);
+    this.name = 'BlockchainProviderUnavailableError';
+  }
 }
 
 // EVM-based chains (Ethereum, Polygon, Arbitrum, Base, etc.)
@@ -96,6 +108,7 @@ class EvmProvider implements BlockchainProvider {
 // Stellar blockchain provider
 class StellarProvider implements BlockchainProvider {
   private server: StellarServer;
+  private readonly logger = new Logger(StellarProvider.name);
 
   constructor(
     horizonUrl: string,
@@ -119,8 +132,23 @@ class StellarProvider implements BlockchainProvider {
         (b) => b.asset_type === 'native',
       );
       return nativeBalance ? Number(nativeBalance.balance) : 0;
-    } catch {
-      return 0;
+    } catch (error) {
+      const horizonError = error as { response?: { status: number } };
+      // 404 = account not found (unfunded), which is a legitimate zero balance
+      if (horizonError?.response?.status === 404) {
+        return 0;
+      }
+      // All other errors (network, 5xx, 429, etc.) should not be swallowed
+      this.logger.error(
+        `Failed to fetch Stellar balance for ${address}: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+      throw new BlockchainProviderUnavailableError(
+        `Stellar balance lookup failed for ${address}`,
+        'stellar',
+        address,
+        error instanceof Error ? error : undefined,
+      );
     }
   }
 
