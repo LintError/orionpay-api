@@ -5,6 +5,8 @@ import { Repository } from 'typeorm';
 import { Wallet } from './entities/wallet.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 
+/* eslint-disable @typescript-eslint/unbound-method */
+
 describe('WalletsService', () => {
   let service: WalletsService;
   let walletsRepository: jest.Mocked<Repository<Wallet>>;
@@ -67,7 +69,7 @@ describe('WalletsService', () => {
       blockchainService.getBalance.mockRejectedValue(error);
       walletsRepository.save.mockResolvedValue(mockWallet); // Should not be called
 
-      await expect(() => service.updateBalance('wallet-123')).rejects.toThrow( // eslint-disable-line @typescript-eslint/unbound-method
+      await expect(() => service.updateBalance('wallet-123')).rejects.toThrow(
         BlockchainProviderUnavailableError,
       );
 
@@ -78,13 +80,13 @@ describe('WalletsService', () => {
       walletsRepository.findOneBy.mockResolvedValue(mockWallet);
       blockchainService.getBalance.mockRejectedValue(new Error('some other error'));
 
-      await expect(() => service.updateBalance('wallet-123')).rejects.toThrow('some other error'); // eslint-disable-line @typescript-eslint/unbound-method
+      await expect(() => service.updateBalance('wallet-123')).rejects.toThrow('some other error');
     });
 
     it('should throw when wallet not found', async () => {
       walletsRepository.findOneBy.mockResolvedValue(null);
 
-      await expect(() => service.updateBalance('nonexistent')).rejects.toThrow('Wallet not found'); // eslint-disable-line @typescript-eslint/unbound-method
+      await expect(() => service.updateBalance('nonexistent')).rejects.toThrow('Wallet not found');
     });
   });
 });
