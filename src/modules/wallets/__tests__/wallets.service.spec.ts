@@ -84,7 +84,7 @@ describe('WalletsService', () => {
     it('should throw when wallet not found', async () => {
       walletsRepository.findOneBy.mockResolvedValue(null);
 
-      await expect(service.updateBalance('nonexistent')).rejects.toThrow('Wallet not found');
+      await expect(() => service.updateBalance('nonexistent')).rejects.toThrow('Wallet not found');
     });
   });
 });

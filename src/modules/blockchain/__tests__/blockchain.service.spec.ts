@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BlockchainService, BlockchainProviderUnavailableError } from '../blockchain.service';
 import { ConfigService } from '@nestjs/config';
-import StellarSdk from 'stellar-sdk';
 
 describe('BlockchainService', () => {
   let service: BlockchainService;
