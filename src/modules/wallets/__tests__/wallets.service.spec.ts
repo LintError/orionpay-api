@@ -78,7 +78,7 @@ describe('WalletsService', () => {
       walletsRepository.findOneBy.mockResolvedValue(mockWallet);
       blockchainService.getBalance.mockRejectedValue(new Error('some other error'));
 
-      await expect(service.updateBalance('wallet-123')).rejects.toThrow('some other error');
+      await expect(() => service.updateBalance('wallet-123')).rejects.toThrow('some other error');
     });
 
     it('should throw when wallet not found', async () => {
