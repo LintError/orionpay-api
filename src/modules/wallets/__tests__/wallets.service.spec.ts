@@ -26,12 +26,12 @@ describe('WalletsService', () => {
       find: jest.fn(),
       findOne: jest.fn(),
       create: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<Repository<Wallet>>;
 
     blockchainService = {
       getBalance: jest.fn(),
       generateAddress: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<BlockchainService>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

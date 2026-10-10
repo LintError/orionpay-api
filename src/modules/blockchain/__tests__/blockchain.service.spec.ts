@@ -3,8 +3,6 @@ import { BlockchainService, BlockchainProviderUnavailableError } from '../blockc
 import { ConfigService } from '@nestjs/config';
 import StellarSdk from 'stellar-sdk';
 
-const { Horizon } = StellarSdk;
-
 describe('BlockchainService', () => {
   let service: BlockchainService;
   let configService: jest.Mocked<ConfigService>;
