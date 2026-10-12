@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
@@ -17,6 +18,9 @@ import { randomInt, randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
+  /** Structured logger. Never log an OTP value - see processPendingOtpRequests. */
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
@@ -111,6 +115,13 @@ export class AuthService {
    * Cron job that runs every 30 seconds to process pending OTP requests
    * Generates OTPs and marks them as ready for use
    * In production, this would also send the OTP via email/SMS
+   *
+   * This is the ONLY path that generates OTPs. It is reachable exclusively via
+   * the cron schedule - the unauthenticated `POST /auth/otp/process` trigger
+   * that used to duplicate it was removed in #15.
+   *
+   * SECURITY: the generated code is never logged. Only the request id is
+   * recorded, so log aggregation cannot become an OTP-disclosure channel.
    */
   @Cron(CronExpression.EVERY_30_SECONDS)
   async processPendingOtpRequests() {
@@ -123,7 +134,7 @@ export class AuthService {
       return;
     }
 
-    console.log(
+    this.logger.log(
       `[OTP Cron] Processing ${pendingOtps.length} pending OTP requests`,
     );
 
@@ -159,13 +170,16 @@ export class AuthService {
         // In a real production environment, you would send the OTP here:
         // await this.emailService.sendOtp(pendingOtp.user.email, otp);
         // await this.smsService.sendOtp(pendingOtp.user.phone, otp);
-        console.log(
-          `[OTP Cron] Generated OTP ${otp} for user ${pendingOtp.user.email}`,
+        //
+        // Log the request id only. Logging `otp` here would disclose a live
+        // one-time credential to anyone with log access.
+        this.logger.log(
+          `[OTP Cron] Generated OTP for request ${pendingOtp.id} (user ${pendingOtp.user.email})`,
         );
       } catch (error) {
-        console.error(
+        this.logger.error(
           `[OTP Cron] Failed to process OTP request ${pendingOtp.id}:`,
-          error,
+          error instanceof Error ? error.stack : String(error),
         );
         await this.userOtpRepository.update(pendingOtp.id, {
           status: OtpRequestStatus.FAILED,
@@ -270,6 +284,20 @@ export class AuthService {
     };
   }
 
+  /**
+   * Email + password sign in.
+   *
+   * Order matters here: the password is verified BEFORE the account status is
+   * checked. Checking `isActive` first would return a distinct message for a
+   * deactivated account, turning this endpoint into a user-enumeration oracle
+   * (an attacker could tell "this account exists but is disabled" apart from
+   * "no such account"). This path therefore reports the same generic
+   * 'Invalid credentials' for an unknown email, a wrong password, and a
+   * deactivated account.
+   *
+   * TODO: consider a `tokenVersion` column on User checked by JwtStrategy so
+   * tokens issued before deactivation stop working. See #14.
+   */
   async signIn(email: string, pass: string): Promise<{ access_token: string }> {
     const user = await this.usersService.findByEmail(email);
     if (!user) {
@@ -278,6 +306,12 @@ export class AuthService {
 
     const isPasswordValid = await bcrypt.compare(pass, user.password);
     if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // Checked after the password so the response cannot be used to probe for
+    // deactivated accounts. Do not move this above bcrypt.compare.
+    if (!user.isActive) {
       throw new UnauthorizedException('Invalid credentials');
     }
 

@@ -58,7 +58,20 @@ async def analyze_routing(transaction: TransactionRequest):
     """Find optimal payment routing for transaction"""
     try:
         routes = payment_routing.find_best_routes(transaction.dict())
-        return {"optimal_route": routes[0] if routes else None, "alternatives": routes[1:]}
+        if not routes:
+            # Never return optimal_route: None. Callers dereference it directly
+            # (PaymentsService.initiateTransaction reads .chain), so a null route
+            # surfaces as an unhandled TypeError 500 instead of a real signal.
+            raise HTTPException(
+                status_code=503,
+                detail="No viable payment route is currently available for this transaction.",
+            )
+        return {
+            "optimal_route": routes[0],
+            "alternatives": routes[1:],
+        }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

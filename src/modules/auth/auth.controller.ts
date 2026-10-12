@@ -52,19 +52,13 @@ export class AuthController {
     );
   }
 
-  // Admin endpoint to manually process pending OTP requests (until cron is set up)
-  @Post('otp/process')
-  @HttpCode(HttpStatus.OK)
-  async processPendingOtps() {
-    return this.authService.processPendingOtpRequests();
-  }
-
-  // Admin endpoint to manually clean up expired OTPs
-  @Post('otp/cleanup')
-  @HttpCode(HttpStatus.OK)
-  async cleanupExpired() {
-    return this.authService.cleanupExpiredOtps();
-  }
+  // NOTE: `POST /auth/otp/process` and `POST /auth/otp/cleanup` were removed.
+  // Both were unauthenticated, unguarded "admin" triggers: /otp/process forced
+  // OTP generation for every pending request (and logged the codes to stdout),
+  // and /otp/cleanup deleted OTP rows. Both operations already run on cron -
+  // processPendingOtpRequests every 30s and cleanupExpiredOtps daily - so the
+  // HTTP triggers added no capability while exposing an OTP-disclosure
+  // primitive and a data-deletion endpoint to anonymous callers. See #15.
 
   // Forgot password / password reset endpoints
   @Post('password/forgot')

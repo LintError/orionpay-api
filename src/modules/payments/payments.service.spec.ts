@@ -1,3 +1,4 @@
+import { ServiceUnavailableException } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { WalletsService } from '../wallets/wallets.service';
 import { BlockchainService } from '../blockchain/blockchain.service';
@@ -152,5 +153,51 @@ describe('PaymentsService', () => {
       ([tx]) => (tx as Transaction).status,
     );
     expect(savedStatuses).toContain(TransactionStatus.FAILED);
+  });
+
+  describe('when the routing engine returns no route (#16)', () => {
+    beforeEach(() => {
+      walletsService.getWalletById.mockResolvedValue(wallet as any);
+      aiService.getOptimalRouting.mockResolvedValue({
+        optimal_route: null,
+        alternatives: [],
+      });
+      aiService.checkFraud.mockResolvedValue({
+        risk_score: 0.1,
+        is_suspicious: false,
+        recommendations: [],
+      });
+    });
+
+    it('raises a ServiceUnavailableException instead of a TypeError', async () => {
+      // Reading `.chain` off a null route threw
+      // "TypeError: Cannot read properties of null" - an unhandled 500.
+      await expect(
+        service.initiateTransaction('user-1', 'w1', 'GDEST...', 25, 'XLM'),
+      ).rejects.toBeInstanceOf(ServiceUnavailableException);
+    });
+
+    it('does not throw a TypeError', async () => {
+      const error = await service
+        .initiateTransaction('user-1', 'w1', 'GDEST...', 25, 'XLM')
+        .then(() => null)
+        .catch((e) => e);
+
+      expect(error).not.toBeInstanceOf(TypeError);
+    });
+
+    it('never broadcasts on-chain', async () => {
+      await expect(
+        service.initiateTransaction('user-1', 'w1', 'GDEST...', 25, 'XLM'),
+      ).rejects.toThrow();
+      expect(blockchainService.sendTransaction).not.toHaveBeenCalled();
+    });
+
+    it('persists no transaction record', async () => {
+      await expect(
+        service.initiateTransaction('user-1', 'w1', 'GDEST...', 25, 'XLM'),
+      ).rejects.toThrow();
+      expect(txRepo.save).not.toHaveBeenCalled();
+    });
   });
 });
