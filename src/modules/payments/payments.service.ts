@@ -1,4 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Transaction, TransactionStatus } from './entities/transaction.entity';
@@ -53,11 +56,22 @@ export class PaymentsService {
       throw new Error('Transaction flagged as suspicious by fraud detection');
     }
 
+    // The routing engine returns 503 when no route is viable, so `optimal_route`
+    // can be null. Reading `.chain` without this check threw
+    // "TypeError: Cannot read properties of null" - an unhandled 500 triggered by
+    // ordinary traffic once the engine's routing table was drained (#16).
+    const route = routingResult.optimal_route;
+    if (!route) {
+      throw new ServiceUnavailableException(
+        'No payment route is currently available. Please try again shortly.',
+      );
+    }
+
     // Create transaction record
     const transaction = this.transactionsRepository.create({
       amount,
       currency,
-      chain: routingResult.optimal_route.chain,
+      chain: route.chain,
       fromWallet,
       toWallet: null, // Will be set if recipient is in our system, else leave null
       fraudRiskScore: fraudCheck.risk_score,
@@ -70,7 +84,7 @@ export class PaymentsService {
     // Execute the transaction on-chain
     try {
       const txHash = await this.blockchainService.sendTransaction(
-        routingResult.optimal_route.chain,
+        route.chain,
         '', // In production, retrieve private key securely from vault,
         toAddress,
         amount,

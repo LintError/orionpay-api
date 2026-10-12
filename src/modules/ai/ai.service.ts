@@ -17,12 +17,17 @@ interface FraudCheckResult {
 }
 
 interface RoutingResult {
+  /**
+   * `null` when the AI engine could not determine a route. The engine answers
+   * 503 in that case rather than returning a null route, so this is defensive:
+   * callers must narrow it before use. See #16.
+   */
   optimal_route: {
     chain: string;
     fee: number;
     time: number;
     liquidity: number;
-  };
+  } | null;
   alternatives: any[];
 }
 
