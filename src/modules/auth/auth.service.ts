@@ -270,6 +270,20 @@ export class AuthService {
     };
   }
 
+  /**
+   * Email + password sign in.
+   *
+   * Order matters here: the password is verified BEFORE the account status is
+   * checked. Checking `isActive` first would return a distinct message for a
+   * deactivated account, turning this endpoint into a user-enumeration oracle
+   * (an attacker could tell "this account exists but is disabled" apart from
+   * "no such account"). This path therefore reports the same generic
+   * 'Invalid credentials' for an unknown email, a wrong password, and a
+   * deactivated account.
+   *
+   * TODO: consider a `tokenVersion` column on User checked by JwtStrategy so
+   * tokens issued before deactivation stop working. See #14.
+   */
   async signIn(email: string, pass: string): Promise<{ access_token: string }> {
     const user = await this.usersService.findByEmail(email);
     if (!user) {
@@ -278,6 +292,12 @@ export class AuthService {
 
     const isPasswordValid = await bcrypt.compare(pass, user.password);
     if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // Checked after the password so the response cannot be used to probe for
+    // deactivated accounts. Do not move this above bcrypt.compare.
+    if (!user.isActive) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
