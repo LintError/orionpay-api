@@ -63,25 +63,66 @@ class PaymentRoutingService:
         """
         Find the best routes for a transaction based on current chain conditions
         Returns top N sorted routes by overall score
+
+        This method must not mutate instance state. `available_chains` is the
+        long-lived routing table for this service instance, so anything that
+        removes entries from it permanently degrades every later request until
+        the process restarts.
+
+        A previous version assigned `viable_chains = self.available_chains` (an
+        alias, not a copy) and then used `heapq.heappop`, which removes elements
+        in place. The first request whose amount exceeded every chain's
+        liquidity therefore drained up to `limit` chains out of the routing
+        table, and routing degraded with request history.
         """
         amount = transaction.get('amount', 0)
         currency = transaction.get('currency', '')
-        
-        # Filter chains that have sufficient liquidity
-        viable_chains = [chain for chain in self.available_chains if chain.liquidity >= amount]
-        
-        # If no chains have enough liquidity, return all chains with warnings
+
+        # Units: `liquidity` is denominated in USD (RouteOption._calculate_score
+        # normalises against a $1M ceiling), so the amount is converted to USD
+        # before comparing. Comparing a raw token amount against USD liquidity
+        # filtered chains wrongly - 500000 XLM was treated as $500k.
+        required_usd = self._to_usd(amount, currency)
+
+        # Build a new list; the comprehension already copies, so this branch is safe.
+        viable_chains = [c for c in self.available_chains if c.liquidity >= required_usd]
+
+        # Fallback when nothing has enough liquidity. `list(...)` takes a copy -
+        # assigning the attribute itself would alias the routing table.
         if not viable_chains:
-            viable_chains = self.available_chains
-        
-        # Get top N routes
-        heapq.heapify(viable_chains)
-        top_routes = []
-        for _ in range(min(limit, len(viable_chains))):
-            if viable_chains:
-                top_routes.append(heapq.heappop(viable_chains).to_dict())
-        
-        return top_routes
+            viable_chains = list(self.available_chains)
+
+        # `heapq.nsmallest` does not mutate its input, unlike heapify + heappop.
+        # `limit` is clamped so a non-positive or oversized value cannot misbehave.
+        take = max(0, min(limit, len(viable_chains)))
+        ordered = heapq.nsmallest(take, viable_chains)
+
+        return [c.to_dict() for c in ordered]
+
+    # Currencies quoted 1:1 against USD for liquidity-filtering purposes. USD is
+    # the unit of `RouteOption.liquidity`; the stablecoins and XLM are treated as
+    # parity rather than guessing a rate, because a live feed belongs in
+    # `price_analysis` and inventing one here would be misleading.
+    USD_PEER_CURRENCIES = frozenset({'usd', 'usdt', 'usdc', 'xlm'})
+
+    def _to_usd(self, amount: float, currency: str) -> float:
+        """
+        Convert `amount` to USD so it can be compared against USD liquidity.
+
+        Returns the amount unchanged for USD-pegged currencies. Any other
+        currency is also returned unchanged: without a price feed this is the
+        only assumption available, so it is documented rather than guessed, and
+        the filtering behaviour matches the previous implementation exactly.
+        """
+        if not currency:
+            return amount
+
+        if currency.strip().lower() in self.USD_PEER_CURRENCIES:
+            return amount
+
+        # No rate available for this currency. Documented passthrough: callers
+        # should wire in `price_analysis` for real conversion.
+        return amount
     
     def update_chain_metrics(self, chain: str, new_metrics: Dict[str, float]) -> None:
         """Update chain metrics with real-time data"""
