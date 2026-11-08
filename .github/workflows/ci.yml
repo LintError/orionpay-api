@@ -22,6 +22,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Audit Dependencies (High/Critical)
+        run: npm audit --audit-level=high
+
       - name: Lint
         run: npm run lint
 
@@ -48,6 +51,40 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Audit Python Dependencies
+        working-directory: ai
+        run: |
+          pip install pip-audit
+          pip-audit --desc on || true
+
       - name: Syntax check
         working-directory: ai
         run: python -m compileall -q .
+
+  container-scan:
+    name: Container Image Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build API Docker Image
+        run: docker build -f docker/api.Dockerfile -t orionpay-api:ci .
+
+      - name: Build AI Docker Image
+        run: docker build -f docker/ai.Dockerfile -t orionpay-ai:ci .
+
+      - name: Scan API Image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'orionpay-api:ci'
+          format: 'table'
+          exit-code: '0'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Scan AI Image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'orionpay-ai:ci'
+          format: 'table'
+          exit-code: '0'
+          severity: 'CRITICAL,HIGH'
