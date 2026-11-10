@@ -10,8 +10,6 @@ build/
 coverage/
 
 # Environment / secrets
-.env
-.env.local
 .env.*.local
 *.pem
 *.key
@@ -25,7 +23,6 @@ yarn-error.log*
 
 # Editor / OS
 .idea/
-.vscode/
 .DS_Store
 Thumbs.db
 
@@ -35,3 +32,4 @@ ai/**/__pycache__/
 ai/.venv/
 ai/venv/
 *.pyc
+config.bat
